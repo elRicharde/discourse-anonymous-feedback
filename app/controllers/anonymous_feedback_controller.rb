@@ -9,7 +9,14 @@ class ::AnonymousFeedbackController < ::ApplicationController
   skip_before_action :verify_authenticity_token, only: [:create], raise: false
 
   def index
-    render :index, layout: false
+    begin
+      html = render_to_string(:index, layout: false)
+      render html: html.html_safe
+    rescue => e
+      Rails.logger.error("[anon-feedback] index error: #{e.class}: #{e.message}")
+      Rails.logger.error(e.backtrace.join("\n"))
+      render plain: "anon-feedback error: #{e.class}: #{e.message}", status: 500
+    end
   end
 
   def create
