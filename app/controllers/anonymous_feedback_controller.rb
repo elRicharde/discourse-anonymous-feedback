@@ -1,7 +1,7 @@
 # frozen_string_literal: true
 
 class ::AnonymousFeedbackController < ::ApplicationController
-  requires_plugin ::AnonymousFeedback::PLUGIN_NAME
+  requires_plugin "discourse-anonymous-feedback"
 
   skip_before_action :check_xhr, only: [:index, :create], raise: false
   skip_before_action :preload_json, only: [:index, :create], raise: false
