@@ -10,10 +10,11 @@ after_initialize do
     PLUGIN_NAME = "discourse-anonymous-feedback"
   end
 
-  require_dependency File.expand_path("../app/controllers/anonymous_feedback_controller.rb", __FILE__)
+  require_relative "app/controllers/anonymous_feedback_controller"
 
   Discourse::Application.routes.append do
-    get  "/anonymous-feedback" => "anonymous_feedback#index"
+    get "/anonymous-feedback" => "anonymous_feedback#index"
     post "/anonymous-feedback" => "anonymous_feedback#create"
   end
 end
+
