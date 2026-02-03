@@ -1,0 +1,24 @@
+plugins:
+  anonymous_feedback_enabled:
+    default: true
+    client: false
+
+  anonymous_feedback_door_code:
+    default: "CHANGE_TO_PASSCODE"
+    client: false
+
+  anonymous_feedback_target_group:
+    default: "heartcare"
+    client: false
+
+  anonymous_feedback_rate_limit_per_hour:
+    default: 6
+    min: 1
+    max: 100
+    client: false
+
+  anonymous_feedback_max_message_length:
+    default: 10000
+    min: 500
+    max: 50000
+    client: false
