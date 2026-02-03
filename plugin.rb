@@ -6,33 +6,14 @@
 enabled_site_setting :anonymous_feedback_enabled
 
 after_initialize do
-  # Controller-Definition innerhalb des after_initialize Blocks
-  class ::AnonymousFeedbackController < ::ApplicationController
-    skip_before_action :check_xhr, only: [:index, :create]
-    skip_before_action :preload_json, only: [:index, :create]
-    skip_before_action :redirect_to_login_if_required, only: [:index, :create]
-    skip_before_action :verify_authenticity_token, only: [:create]
-    
-    def index
-      # Zeige das Formular
-      render json: { success: true }
-    end
-    
-    def create
-      # Verarbeite das Feedback
-      door_code = params[:door_code]
-      message = params[:message]
-      
-      # Hier kannst du den Code zur Verarbeitung einfügen
-      # z.B. PM an eine Gruppe senden
-      
-      render json: { success: true }
-    end
+  module ::AnonymousFeedback
+    PLUGIN_NAME = "discourse-anonymous-feedback"
   end
-  
-  # Routes registrieren
+
+  require_dependency File.expand_path("../app/controllers/anonymous_feedback_controller.rb", __FILE__)
+
   Discourse::Application.routes.append do
-    get "/anonymous-feedback" => "anonymous_feedback#index"
+    get  "/anonymous-feedback" => "anonymous_feedback#index"
     post "/anonymous-feedback" => "anonymous_feedback#create"
   end
 end
