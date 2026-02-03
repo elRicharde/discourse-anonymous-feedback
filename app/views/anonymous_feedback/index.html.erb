@@ -1,4 +1,71 @@
 <div class="wrap">
   <h1>Anonymes Feedback</h1>
-  <p>Hier entsteht gleich das Feedback-Formular.</p>
+
+  <p>Bitte Türcode eingeben und Nachricht senden. Es ist kein Login nötig.</p>
+
+  <form id="anon-feedback-form">
+    <div style="margin-bottom: 1rem;">
+      <label for="door_code"><strong>Türcode</strong></label><br>
+      <input id="door_code" name="door_code" type="password" autocomplete="off" required style="width: 100%; max-width: 420px;">
+    </div>
+
+    <div style="margin-bottom: 1rem;">
+      <label for="subject"><strong>Betreff</strong></label><br>
+      <input id="subject" name="subject" type="text" maxlength="120" required style="width: 100%; max-width: 720px;">
+    </div>
+
+    <div style="margin-bottom: 1rem;">
+      <label for="message"><strong>Nachricht</strong></label><br>
+      <textarea id="message" name="message" rows="8" required style="width: 100%; max-width: 720px;"></textarea>
+    </div>
+
+    <!-- Honeypot (Bots füllen das oft aus; Menschen lassen es leer) -->
+    <input type="text" name="website" id="website" style="display:none" tabindex="-1" autocomplete="off">
+
+    <button type="submit" class="btn btn-primary">Senden</button>
+  </form>
+
+  <div id="anon-feedback-status" style="margin-top: 1rem;"></div>
 </div>
+
+<script>
+(function () {
+  const form = document.getElementById("anon-feedback-form");
+  const status = document.getElementById("anon-feedback-status");
+
+  function setStatus(msg, isError) {
+    status.textContent = msg;
+    status.style.color = isError ? "var(--danger)" : "var(--success)";
+  }
+
+  form.addEventListener("submit", async (e) => {
+    e.preventDefault();
+    setStatus("Sende…", false);
+
+    const door_code = document.getElementById("door_code").value;
+    const subject   = document.getElementById("subject").value;
+    const message   = document.getElementById("message").value;
+    const website   = document.getElementById("website").value;
+
+    try {
+      const res = await fetch("/anonymous-feedback", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ door_code, subject, message, website })
+      });
+
+      const data = await res.json().catch(() => ({}));
+
+      if (!res.ok) {
+        setStatus(data.error || "Fehler beim Senden.", true);
+        return;
+      }
+
+      setStatus("Danke! Feedback wurde angenommen.", false);
+      form.reset();
+    } catch (err) {
+      setStatus("Netzwerkfehler. Bitte später erneut versuchen.", true);
+    }
+  });
+})();
+</script>
