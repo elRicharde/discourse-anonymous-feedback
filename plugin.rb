@@ -1,6 +1,6 @@
 # name: discourse-anonymous-feedback
 # about: Anonymous feedback form (door code) that sends PM to a group
-# version: 0.1
+# version: 0.2
 # authors: Richard
 
 enabled_site_setting :anonymous_feedback_enabled
@@ -17,7 +17,4 @@ after_initialize do
     ::Auth::DefaultCurrentUserProvider.public_routes << "anonymous_feedback#index"
   end
 end
-
-
-
 
