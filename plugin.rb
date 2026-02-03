@@ -6,8 +6,11 @@
 enabled_site_setting :anonymous_feedback_enabled
 
 after_initialize do
+  require_dependency File.expand_path("../app/controllers/anonymous_feedback_controller.rb", __FILE__)
+
   Discourse::Application.routes.append do
     get "/anonymous-feedback" => "anonymous_feedback#index"
   end
 end
+
 
