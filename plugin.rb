@@ -11,6 +11,13 @@ after_initialize do
   Discourse::Application.routes.append do
     get "/anonymous-feedback" => "anonymous_feedback#index"
   end
+
+  # Allow this endpoint even when SiteSetting.login_required = true
+  if defined?(::Auth::DefaultCurrentUserProvider)
+    ::Auth::DefaultCurrentUserProvider.public_routes << "anonymous_feedback#index"
+  end
 end
+
+
 
 
