@@ -9,7 +9,7 @@ class ::AnonymousFeedbackController < ::ApplicationController
   skip_before_action :verify_authenticity_token, only: [:create], raise: false
 
   def index
-    render :index
+    render :index, layout: false
   end
 
   def create
