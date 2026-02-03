@@ -1,2 +1,2 @@
-# discourse-anonymous-feedback-
+# discourse-anonymous-feedback
 Anonymous Feedback Formular in Discourse
