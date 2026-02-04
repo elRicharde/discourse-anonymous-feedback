@@ -18,7 +18,7 @@ class ::AnonymousFeedbackController < ::ApplicationController
 
   def index
     return if performed?
-    render :index, layout: false
+    render :index, layout: "application"
   end
 
   def unlock
