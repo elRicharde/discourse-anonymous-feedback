@@ -1,7 +1,7 @@
 # frozen_string_literal: true
 
 class ::AnonymousFeedbackController < ::ApplicationController
-  requires_plugin "discourse-anonymous-feedback"
+  requires_plugin ::AnonymousFeedback::PLUGIN_NAME
 
   skip_before_action :check_xhr, only: [:index, :create], raise: false
   skip_before_action :preload_json, only: [:index, :create], raise: false
@@ -13,18 +13,30 @@ class ::AnonymousFeedbackController < ::ApplicationController
   end
 
   def create
-    # Honeypot
-    return render json: { success: true }, status: 200 if params[:website].present?
+    # Honeypot: wenn gesetzt -> Bot -> tun als ob ok
+    return redirect_to "/anonymous-feedback?sent=1" if params[:website].present?
 
     door_code = params[:door_code].to_s
     subject   = params[:subject].to_s.strip
     message   = params[:message].to_s
 
     unless door_code.present? && subject.present? && message.present?
-      return render json: { error: I18n.t("anonymous_feedback.errors.missing_fields") }, status: 400
+      return render plain: "Fehlende Felder", status: 400
     end
 
-    # Doorcode-Check kommt in Chapter 4
-    render json: { success: true }, status: 200
+    group_name = SiteSetting.anonymous_feedback_target_group.to_s.strip
+    if group_name.blank?
+      return render plain: "Target group not configured", status: 500
+    end
+
+    PostCreator.create!(
+      Discourse.system_user,
+      title: subject,
+      raw: message,
+      archetype: Archetype.private_message,
+      target_group_names: [group_name]
+    )
+
+    redirect_to "/anonymous-feedback?sent=1"
   end
 end
