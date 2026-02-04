@@ -8,6 +8,12 @@ class ::AnonymousFeedbackController < ::ApplicationController
   skip_before_action :redirect_to_login_if_required, only: %i[index unlock create], raise: false
   skip_before_action :verify_authenticity_token, only: %i[unlock create], raise: false
 
+  # DoorCode RateLimit:
+  # 1 / 2 Sekunden
+  # nach 5  -> 1 min
+  # nach 10 -> 10 min
+  # nach 15 -> 1 h
+  # nach 20 -> 1 Tag
   DOORCODE_MIN_INTERVAL = 2 # seconds
   DOORCODE_FAIL_BLOCKS = [
     [20, 86_400], # 1 day
@@ -20,19 +26,22 @@ class ::AnonymousFeedbackController < ::ApplicationController
     render :index, layout: false
   end
 
+  # Türcode prüfen + "freischalten" (Session-Flag)
   def unlock
     return render json: { success: true }, status: 200 if params[:website].present? # Honeypot
 
-    ip = request.remote_ip.to_s
+    ip  = request.remote_ip.to_s
     key = "anon_feedback:doorcode:#{ip}"
     now = Time.now.to_i
 
+    # Block aktiv?
     blocked_until = Discourse.redis.hget(key, "blocked_until").to_i
     if blocked_until > now
       wait_s = blocked_until - now
       return render json: { error: I18n.t("anonymous_feedback.errors.rate_limited", seconds: wait_s) }, status: 429
     end
 
+    # 1 Versuch / 2 Sekunden
     last_attempt = Discourse.redis.hget(key, "last_attempt").to_i
     if last_attempt > 0 && (now - last_attempt) < DOORCODE_MIN_INTERVAL
       wait_s = DOORCODE_MIN_INTERVAL - (now - last_attempt)
@@ -40,7 +49,7 @@ class ::AnonymousFeedbackController < ::ApplicationController
     end
 
     Discourse.redis.hset(key, "last_attempt", now)
-    Discourse.redis.expire(key, 86_400) # state max 1 day halten
+    Discourse.redis.expire(key, 86_400) # state max 1 Tag halten
 
     door_code = params[:door_code].to_s
     expected  = SiteSetting.anonymous_feedback_door_code.to_s
@@ -51,22 +60,20 @@ class ::AnonymousFeedbackController < ::ApplicationController
         ::Digest::SHA256.hexdigest(expected)
       )
 
-    if ok
-      # Reset on success
-      Discourse.redis.del(key)
-      session[:anon_feedback_unlocked] = true
-      return render json: { success: true }, status: 200
+    unless ok
+      fails = Discourse.redis.hincrby(key, "fail_count", 1)
+
+      block_seconds = DOORCODE_FAIL_BLOCKS.find { |threshold, _| fails >= threshold }&.last
+      Discourse.redis.hset(key, "blocked_until", now + block_seconds) if block_seconds
+
+      return render json: { error: I18n.t("anonymous_feedback.errors.invalid_code") }, status: 403
     end
 
-    # Failure path: count + block thresholds
-    fails = Discourse.redis.hincrby(key, "fail_count", 1)
+    # Erfolg: DoorCode-Limits zurücksetzen
+    Discourse.redis.del(key)
 
-    block_seconds = DOORCODE_FAIL_BLOCKS.find { |threshold, _| fails >= threshold }&.last
-    if block_seconds
-      Discourse.redis.hset(key, "blocked_until", now + block_seconds)
-    end
-
-    render json: { error: I18n.t("anonymous_feedback.errors.invalid_code") }, status: 403
+    session[:anon_feedback_unlocked] = true
+    render json: { success: true }, status: 200
   end
 
   def create
@@ -74,6 +81,23 @@ class ::AnonymousFeedbackController < ::ApplicationController
 
     unless session[:anon_feedback_unlocked]
       return render json: { error: I18n.t("anonymous_feedback.errors.invalid_code") }, status: 403
+    end
+
+    # Post/PM RateLimit aus Settings verwenden (anonymous_feedback_rate_limit_per_hour)
+    limit_per_hour = SiteSetting.anonymous_feedback_rate_limit_per_hour.to_i
+    if limit_per_hour > 0
+      ip = request.remote_ip.to_s
+      rl_key = "anon_feedback:post:ip:#{ip}"
+
+      # Zähler + expiry auf 1 Stunde (sliding-ish genug für den Zweck)
+      count = Discourse.redis.incr(rl_key)
+      Discourse.redis.expire(rl_key, 3600) if count == 1
+
+      if count > limit_per_hour
+        ttl = Discourse.redis.ttl(rl_key).to_i
+        ttl = 3600 if ttl <= 0
+        return render json: { error: I18n.t("anonymous_feedback.errors.post_rate_limited", seconds: ttl) }, status: 429
+      end
     end
 
     subject = params[:subject].to_s.strip
@@ -101,7 +125,9 @@ class ::AnonymousFeedbackController < ::ApplicationController
       target_group_names: [group_name]
     )
 
+    # nach erfolgreichem Senden wieder "sperren"
     session.delete(:anon_feedback_unlocked)
+
     render json: { success: true }, status: 200
   end
 end
