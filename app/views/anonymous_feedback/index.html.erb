@@ -1,7 +1,4 @@
-<script nonce="<%= script_nonce %>">
 <style nonce="<%= style_nonce %>">
-
-<style>
   .af-wrap { max-width: 720px; margin: 24px auto; padding: 0 12px; font-family: system-ui, -apple-system, Segoe UI, Roboto, Arial, sans-serif; }
   .af-card { border: 1px solid #ddd; border-radius: 10px; padding: 16px; }
   .af-row { margin-bottom: 12px; }
@@ -14,6 +11,15 @@
   .af-btn-muted { background: #eee; }
   .af-status { margin-top: 12px; font-weight: 600; }
   .af-hidden { display:none; }
+
+  /* Mobile Verbesserungen */
+  @media (max-width: 480px) {
+    .af-wrap { margin: 16px auto; padding: 0 10px; }
+    .af-card { padding: 12px; border-radius: 12px; }
+    .af-actions { gap: 8px; }
+    .af-btn { width: 100%; padding: 12px 14px; }
+    .af-textarea { min-height: 120px; }
+  }
 </style>
 
 <div class="af-wrap">
@@ -66,7 +72,7 @@
   </div>
 </div>
 
-<script>
+<script nonce="<%= script_nonce %>">
 (function () {
   const stepCode = document.getElementById("af-step-code");
   const stepForm = document.getElementById("af-step-form");
