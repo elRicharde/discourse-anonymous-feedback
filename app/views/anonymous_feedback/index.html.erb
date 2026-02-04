@@ -72,7 +72,7 @@
   </div>
 </div>
 
-<script nonce="<%= script_nonce %>">
+<script nonce="<%= respond_to?(:content_security_policy_nonce) ? content_security_policy_nonce : "" %>">
 (function () {
   const stepCode = document.getElementById("af-step-code");
   const stepForm = document.getElementById("af-step-form");
