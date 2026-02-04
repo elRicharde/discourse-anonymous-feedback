@@ -1,4 +1,3 @@
-export default {
-  resource: "anonymous-feedback",
-  path: "/anonymous-feedback",
-};
+export default function () {
+  this.route("anonymous-feedback", { path: "/anonymous-feedback" });
+}

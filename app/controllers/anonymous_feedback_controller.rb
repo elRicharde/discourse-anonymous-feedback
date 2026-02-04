@@ -9,9 +9,9 @@ class ::AnonymousFeedbackController < ::ApplicationController
   # - door code
   # - global rate limits
   # - per-(HMAC) client fail/lockout buckets (no IP stored)
-  skip_before_action :check_xhr, only: %i[index unlock create], raise: false
-  skip_before_action :preload_json, only: %i[index unlock create], raise: false
-  skip_before_action :redirect_to_login_if_required, only: %i[index unlock create], raise: false
+  skip_before_action :check_xhr, only: %i[show unlock create], raise: false
+  skip_before_action :preload_json, only: %i[show unlock create], raise: false
+  skip_before_action :redirect_to_login_if_required, only: %i[show unlock create], raise: false
   skip_before_action :verify_authenticity_token, only: %i[unlock create], raise: false
 
   # Brute force protection (per client bucket; client id = HMAC(ip, rotating secret))
@@ -23,10 +23,10 @@ class ::AnonymousFeedbackController < ::ApplicationController
     [5, 60]       # 1 min
   ].freeze
 
-  def index
+  def show
     raise Discourse::NotFound unless feature_enabled?
 
-    render :index, layout: "application"
+    render "default/empty"
   end
 
   def unlock

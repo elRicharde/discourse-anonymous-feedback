@@ -18,11 +18,11 @@ after_initialize do
 
   # Routes (addresses are intentionally NOT configurable)
   Discourse::Application.routes.append do
-    get  "/anonymous-feedback"        => "anonymous_feedback#index"
+    get  "/anonymous-feedback"        => "anonymous_feedback#show"
     post "/anonymous-feedback/unlock" => "anonymous_feedback#unlock"
     post "/anonymous-feedback"        => "anonymous_feedback#create"
 
-    get  "/white-board"        => "anonymous_feedback#index"
+    get  "/white-board"        => "anonymous_feedback#show"
     post "/white-board/unlock" => "anonymous_feedback#unlock"
     post "/white-board"        => "anonymous_feedback#create"
   end
