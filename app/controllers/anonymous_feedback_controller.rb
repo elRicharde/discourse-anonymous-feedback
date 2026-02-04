@@ -117,13 +117,23 @@ class ::AnonymousFeedbackController < ::ApplicationController
       return render json: { error: "Target group not configured" }, status: 500
     end
 
-    PostCreator.create!(
-      Discourse.system_user,
-      title: subject,
-      raw: message,
-      archetype: Archetype.private_message,
-      target_group_names: [group_name]
-    )
+    begin
+      post = PostCreator.create!(
+        Discourse.system_user,
+        title: subject,
+        raw: message,
+        archetype: Archetype.private_message,
+        target_group_names: [group_name]
+      )
+      
+      session.delete(:anon_feedback_unlocked)
+      Rails.logger.info("[AnonymousFeedback] Successfully created PM to group '#{group_name}' from IP #{request.remote_ip}")
+      render json: { success: true }, status: 200
+    rescue => e
+      Rails.logger.error("[AnonymousFeedback] Failed to create PM: #{e.message}")
+      Rails.logger.error(e.backtrace.join("\n"))
+      render json: { error: I18n.t("anonymous_feedback.errors.send_failed") }, status: 500
+    end
 
     # nach erfolgreichem Senden wieder "sperren"
     session.delete(:anon_feedback_unlocked)
