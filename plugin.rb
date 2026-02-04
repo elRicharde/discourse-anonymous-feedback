@@ -14,10 +14,12 @@ after_initialize do
   require_dependency File.expand_path("../app/controllers/anonymous_feedback_controller.rb", __FILE__)
 
   # Routes
-  Discourse::Application.routes.append do
-    get  "/anonymous-feedback" => "anonymous_feedback#index"
-    post "/anonymous-feedback" => "anonymous_feedback#create"
-  end
+Discourse::Application.routes.append do
+  get  "/anonymous-feedback" => "anonymous_feedback#index"
+  post "/anonymous-feedback/unlock" => "anonymous_feedback#unlock"
+  post "/anonymous-feedback" => "anonymous_feedback#create"
+end
+
 
   # Ensure Rails can find plugin views for this controller
   # (needed in some Discourse/Rails setups when using custom controllers)
