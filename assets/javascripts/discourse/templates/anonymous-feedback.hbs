@@ -1,0 +1,53 @@
+<div class="wrap">
+  <h1>Anonymes Feedback</h1>
+  <p>Kein Login nötig. Erst Türcode eingeben, danach Nachricht verfassen.</p>
+
+  {{#if this.error}}
+    <div class="alert alert-error">{{this.error}}</div>
+  {{/if}}
+
+  {{#if this.sent}}
+    <div class="alert alert-success">Gesendet.</div>
+  {{/if}}
+
+  {{#unless this.unlocked}}
+    <div class="control-group">
+      <label class="control-label">Türcode</label>
+      <div class="controls">
+        <Input
+          @value={{this.doorCode}}
+          @type="password"
+          class="input-xxlarge"
+          autocomplete="one-time-code"
+        />
+      </div>
+    </div>
+
+    <button type="button" class="btn btn-primary" {{on "click" this.unlock}}>
+      Weiter
+    </button>
+  {{else}}
+    <div class="control-group">
+      <label class="control-label">Betreff</label>
+      <div class="controls">
+        <Input @value={{this.subject}} class="input-xxlarge" />
+      </div>
+    </div>
+
+    <div class="control-group">
+      <label class="control-label">Nachricht</label>
+      <div class="controls">
+        <Textarea @value={{this.message}} class="input-xxlarge" rows="8" />
+      </div>
+    </div>
+
+    <button
+      type="button"
+      class="btn btn-primary"
+      disabled={{this.sending}}
+      {{on "click" this.send}}
+    >
+      {{#if this.sending}}Sende...{{else}}Senden{{/if}}
+    </button>
+  {{/else}}
+</div>
