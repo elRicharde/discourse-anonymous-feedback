@@ -1,33 +1,38 @@
-.anon-feedback-page {
+/* Scoped to the wrapper used in the Ember component */
+.af-wrap {
   .control-group .controls {
     max-width: none;
   }
 
-  .anon-feedback-input,
-  .anon-feedback-textarea {
+  .af-input,
+  .af-textarea {
     width: 100%;
     box-sizing: border-box;
   }
 
-  .anon-feedback-actions {
+  .af-actions {
     margin-top: 0.75rem;
     display: flex;
     gap: 0.5rem;
     flex-wrap: wrap;
   }
 
-  .anon-feedback-honeypot {
-    position: absolute !important;
-    left: -10000px !important;
-    top: auto !important;
-    width: 1px !important;
-    height: 1px !important;
-    overflow: hidden !important;
-  }
-
+  /* Media query for mobile buttons */
   @media (max-width: 480px) {
-    .anon-feedback-actions .btn {
+    .af-actions .btn {
       width: 100%;
     }
   }
+}
+
+/* Honeypot must be hidden but technically "visible" to bots */
+.anon-feedback-honeypot {
+  position: absolute !important;
+  left: -10000px !important;
+  top: auto !important;
+  width: 1px !important;
+  height: 1px !important;
+  overflow: hidden !important;
+  opacity: 0;
+  pointer-events: none;
 }
