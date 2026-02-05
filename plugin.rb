@@ -2,7 +2,7 @@
 
 # name: discourse-anonymous-feedback
 # about: Public doorcode form that sends PM to a group (2 endpoints: anonymous-feedback + white-board)
-# version: 0.95
+# version: 1.0
 # authors: Richard
 
 enabled_site_setting :anonymous_feedback_enabled

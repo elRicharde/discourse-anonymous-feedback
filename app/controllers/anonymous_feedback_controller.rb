@@ -192,32 +192,19 @@ class ::AnonymousFeedbackController < ::ApplicationController
     end
   end
 
-  # -------- settings helpers (separate settings per endpoint) --------
+  # -------- settings helpers (dynamic lookup based on kind) --------
+  def setting(field)
+    prefix = (kind == :wb) ? "white_board" : "anonymous_feedback"
+    setting_name = "#{prefix}_#{field}"
+    SiteSetting.get(setting_name)
+  end
+
   def setting_str(field)
-    case [kind, field]
-    when [:af, :door_code] then SiteSetting.anonymous_feedback_door_code.to_s
-    when [:wb, :door_code] then SiteSetting.white_board_door_code.to_s
-
-    when [:af, :target_group] then SiteSetting.anonymous_feedback_target_group.to_s
-    when [:wb, :target_group] then SiteSetting.white_board_target_group.to_s
-
-    else ""
-    end
+    setting(field).to_s
   end
 
   def setting_int(field)
-    case [kind, field]
-    when [:af, :rate_limit_per_hour] then SiteSetting.anonymous_feedback_rate_limit_per_hour.to_i
-    when [:wb, :rate_limit_per_hour] then SiteSetting.white_board_rate_limit_per_hour.to_i
-
-    when [:af, :max_message_length] then SiteSetting.anonymous_feedback_max_message_length.to_i
-    when [:wb, :max_message_length] then SiteSetting.white_board_max_message_length.to_i
-
-    when [:af, :hmac_rotation_hours] then SiteSetting.anonymous_feedback_hmac_rotation_hours.to_i
-    when [:wb, :hmac_rotation_hours] then SiteSetting.white_board_hmac_rotation_hours.to_i
-
-    else 0
-    end
+    setting(field).to_i
   end
 
   # -------- subject prefix --------
@@ -227,18 +214,11 @@ class ::AnonymousFeedbackController < ::ApplicationController
 
   # -------- posting user (system or configured bot) --------
   def posting_user
-    username =
-      if kind == :wb
-        SiteSetting.white_board_bot_username.to_s.strip
-      else
-        SiteSetting.anonymous_feedback_bot_username.to_s.strip
-      end
-
+    username = setting_str("bot_username").strip
     if username.present?
       u = User.find_by(username: username)
       return u if u && u.active?
     end
-
     Discourse.system_user
   end
 
