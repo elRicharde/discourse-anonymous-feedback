@@ -8,6 +8,8 @@
 enabled_site_setting :anonymous_feedback_enabled
 enabled_site_setting :white_board_enabled
 
+register_asset "stylesheets/common/anonymous-feedback.scss"
+
 after_initialize do
   module ::AnonymousFeedback
     PLUGIN_NAME = "discourse-anonymous-feedback"
