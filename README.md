@@ -70,7 +70,7 @@ Follow the standard guide for installing Discourse plugins: [Install a Plugin](h
         - exec:
             cd: $home/plugins
             cmd:
-              - git clone https://github.com/discourse/discourse-anonymous-feedback.git
+              - git clone https://github.com/elRicharde/discourse-anonymous-feedback
     ```
 2.  Rebuild your container: `cd /var/discourse && ./launcher rebuild app`
 
@@ -180,7 +180,7 @@ Folgen Sie der Standard-Anleitung zur Installation von Discourse-Plugins: [Ein P
         - exec:
             cd: $home/plugins
             cmd:
-              - git clone https://github.com/discourse/discourse-anonymous-feedback.git
+              - git clone https://github.com/elRicharde/discourse-anonymous-feedback
     ```
 2.  Bauen Sie Ihren Container neu: `cd /var/discourse && ./launcher rebuild app`
 
