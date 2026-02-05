@@ -27,6 +27,7 @@
 
 /* Honeypot must be hidden but technically "visible" to bots */
 .anon-feedback-honeypot {
+  display: none !important; /* Force hide for humans */
   position: absolute !important;
   left: -10000px !important;
   top: auto !important;
