@@ -1,12 +1,5 @@
 import AnonymousFeedbackForm from "../components/anonymous-feedback-form";
 
 <template>
-  <AnonymousFeedbackForm
-    @title={{this.title}}
-    @intro={{this.intro}}
-    @unlockUrl="/white-board/unlock"
-    @sendUrl="/white-board"
-    @subjectPlaceholder={{this.subjectPlaceholder}}
-    @messagePlaceholder={{this.messagePlaceholder}}
-  />
+  <AnonymousFeedbackForm @mode="wb" />
 </template>

@@ -1,12 +1,32 @@
 import Component from "@glimmer/component";
 import { tracked } from "@glimmer/tracking";
 import { action } from "@ember/object";
+import { service } from "@ember/service";
 import { Input, Textarea } from "@ember/component";
 import { on } from "@ember/modifier";
 import { ajax } from "discourse/lib/ajax";
 import { i18n } from "discourse-i18n";
 
+const MODES = {
+  af: {
+    titleKey: "js.anonymous_feedback.title_af",
+    unlockUrl: "/anonymous-feedback/unlock",
+    sendUrl: "/anonymous-feedback",
+    subjectSetting: "anonymous_feedback_subject_placeholder",
+    messageSetting: "anonymous_feedback_message_placeholder",
+  },
+  wb: {
+    titleKey: "js.anonymous_feedback.title_wb",
+    unlockUrl: "/white-board/unlock",
+    sendUrl: "/white-board",
+    subjectSetting: "white_board_subject_placeholder",
+    messageSetting: "white_board_message_placeholder",
+  },
+};
+
 export default class AnonymousFeedbackForm extends Component {
+  @service siteSettings;
+
   @tracked unlocked = false;
   @tracked sending = false;
   @tracked sent = false;
@@ -15,8 +35,27 @@ export default class AnonymousFeedbackForm extends Component {
   @tracked doorCode = "";
   @tracked subject = "";
   @tracked message = "";
-
   @tracked website = "";
+
+  get config() {
+    return MODES[this.args.mode] || MODES.af;
+  }
+
+  get title() {
+    return i18n(this.config.titleKey);
+  }
+
+  get intro() {
+    return i18n("js.anonymous_feedback.intro");
+  }
+
+  get subjectPlaceholder() {
+    return this.siteSettings[this.config.subjectSetting];
+  }
+
+  get messagePlaceholder() {
+    return this.siteSettings[this.config.messageSetting];
+  }
 
   @action
   async unlock() {
@@ -30,7 +69,7 @@ export default class AnonymousFeedbackForm extends Component {
     }
 
     try {
-      await ajax(this.args.unlockUrl, {
+      await ajax(this.config.unlockUrl, {
         type: "POST",
         data: {
           door_code: code,
@@ -62,7 +101,7 @@ export default class AnonymousFeedbackForm extends Component {
 
     this.sending = true;
     try {
-      await ajax(this.args.sendUrl, {
+      await ajax(this.config.sendUrl, {
         type: "POST",
         data: {
           subject,
@@ -98,8 +137,8 @@ export default class AnonymousFeedbackForm extends Component {
 
   <template>
     <div class="af-wrap">
-      <h1>{{@title}}</h1>
-      <p>{{@intro}}</p>
+      <h1>{{this.title}}</h1>
+      <p>{{this.intro}}</p>
 
       {{#if this.error}}
         <div class="alert alert-error">{{this.error}}</div>
@@ -109,7 +148,6 @@ export default class AnonymousFeedbackForm extends Component {
         <div class="alert alert-success">{{i18n "js.anonymous_feedback.sent"}}</div>
       {{/if}}
 
-      {{! Honeypot: must stay invisible for humans }}
       <Input
         @value={{this.website}}
         class="anon-feedback-honeypot"
@@ -143,7 +181,7 @@ export default class AnonymousFeedbackForm extends Component {
             <Input
               @value={{this.subject}}
               class="af-input"
-              placeholder={{@subjectPlaceholder}}
+              placeholder={{this.subjectPlaceholder}}
             />
           </div>
         </div>
@@ -154,7 +192,7 @@ export default class AnonymousFeedbackForm extends Component {
             <Textarea
               @value={{this.message}}
               class="af-textarea"
-              placeholder={{@messagePlaceholder}}
+              placeholder={{this.messagePlaceholder}}
             />
           </div>
         </div>
