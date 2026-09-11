@@ -65,6 +65,7 @@ plugins:
     default: ""
     client: true
     type: text
+    textarea: true
 
 
   # =====================================================
@@ -117,3 +118,4 @@ plugins:
     default: ""
     client: true
     type: text
+    textarea: true
