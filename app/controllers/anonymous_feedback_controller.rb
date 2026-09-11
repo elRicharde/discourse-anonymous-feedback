@@ -147,12 +147,16 @@ class ::AnonymousFeedbackController < ::ApplicationController
     title = "#{subject_prefix}#{subject}"
 
     begin
+      # skip_rate_limits: the posting user is a bot, throttling is done by this
+      # plugin's own global limiter (rate_limit_per_hour). Without it Discourse
+      # applies rate_limit_(new_user_)create_topic and max_personal_messages_per_day.
       creator = PostCreator.new(
         posting_user,
         title: title,
         raw: message,
         archetype: Archetype.private_message,
-        target_group_names: [group_name]
+        target_group_names: [group_name],
+        skip_rate_limits: true
       )
       creator.create
 
