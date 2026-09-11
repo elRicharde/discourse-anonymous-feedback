@@ -10,6 +10,12 @@
     box-sizing: border-box;
   }
 
+  /* Höhe wird per Modifier an den Bildschirm angepasst, manuell bleibt sie verstellbar */
+  .af-textarea {
+    min-height: 120px;
+    resize: vertical;
+  }
+
   .af-actions {
     margin-top: 0.75rem;
     display: flex;

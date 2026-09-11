@@ -4,6 +4,7 @@ import { action } from "@ember/object";
 import { service } from "@ember/service";
 import { Input, Textarea } from "@ember/component";
 import { on } from "@ember/modifier";
+import { modifier } from "ember-modifier";
 import { ajax } from "discourse/lib/ajax";
 import { i18n } from "discourse-i18n";
 
@@ -23,6 +24,39 @@ const MODES = {
     messageSetting: "white_board_message_placeholder",
   },
 };
+
+// Passt die Höhe der Textarea an den Bildschirm an: sie füllt den Platz bis
+// zum unteren Rand, sodass der Senden-Button gerade noch sichtbar bleibt.
+const MIN_TEXTAREA_HEIGHT = 120;
+const BOTTOM_PADDING = 24;
+
+const fitToViewport = modifier((element) => {
+  const resize = () => {
+    const wrap = element.closest(".af-wrap");
+    const actions = wrap?.querySelector(".af-actions");
+    // Dokument-Offset statt Viewport-Offset, damit Scrollen das Ergebnis nicht verändert
+    const top = element.getBoundingClientRect().top + window.scrollY;
+    const reserve = (actions?.offsetHeight || 40) + BOTTOM_PADDING;
+    const available = window.innerHeight - top - reserve;
+    element.style.height = `${Math.max(MIN_TEXTAREA_HEIGHT, available)}px`;
+  };
+
+  resize();
+  window.addEventListener("resize", resize);
+
+  // Neu berechnen, wenn oberhalb Inhalt dazukommt (z.B. Fehlermeldung)
+  let observer;
+  const wrap = element.closest(".af-wrap");
+  if (wrap && typeof ResizeObserver !== "undefined") {
+    observer = new ResizeObserver(resize);
+    observer.observe(wrap);
+  }
+
+  return () => {
+    window.removeEventListener("resize", resize);
+    observer?.disconnect();
+  };
+});
 
 export default class AnonymousFeedbackForm extends Component {
   @service siteSettings;
@@ -193,6 +227,7 @@ export default class AnonymousFeedbackForm extends Component {
               @value={{this.message}}
               class="af-textarea"
               placeholder={{this.messagePlaceholder}}
+              {{fitToViewport}}
             />
           </div>
         </div>
