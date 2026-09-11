@@ -92,6 +92,14 @@ export default class AnonymousFeedbackForm extends Component {
   }
 
   @action
+  onDoorCodeKeydown(event) {
+    if (event.key === "Enter") {
+      event.preventDefault();
+      this.unlock();
+    }
+  }
+
+  @action
   async unlock() {
     this.error = null;
     this.sent = false;
@@ -199,6 +207,7 @@ export default class AnonymousFeedbackForm extends Component {
               @type="password"
               class="af-input"
               autocomplete="one-time-code"
+              {{on "keydown" this.onDoorCodeKeydown}}
             />
           </div>
         </div>
