@@ -18,6 +18,7 @@ de:
       group_not_configured: "Zielgruppe ist nicht konfiguriert."
       group_not_found: "Zielgruppe existiert nicht."
       send_failed: "Senden fehlgeschlagen."
+      send_rejected: "Senden abgelehnt: %{details}"
       generic: "Fehler."
 
 

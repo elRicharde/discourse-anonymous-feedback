@@ -147,13 +147,22 @@ class ::AnonymousFeedbackController < ::ApplicationController
     title = "#{subject_prefix}#{subject}"
 
     begin
-      PostCreator.create!(
+      creator = PostCreator.new(
         posting_user,
         title: title,
         raw: message,
         archetype: Archetype.private_message,
         target_group_names: [group_name]
       )
+      creator.create
+
+      # Validation errors (e.g. duplicate content, title too short) are user-facing
+      # and contain no message content, so we pass them through verbatim.
+      if creator.errors.present?
+        details = creator.errors.full_messages.join(", ")
+        Rails.logger.error("[AnonymousFeedback] create rejected: #{details}")
+        return render_json_error("send_rejected", 422, details: details)
+      end
 
       # One doorcode unlock = one message; forces re-unlock for next message (your preferred flow)
       session.delete(session_unlock_key)

@@ -18,5 +18,6 @@ en:
       group_not_configured: "Target group is not configured."
       group_not_found: "Target group does not exist."
       send_failed: "Sending failed."
+      send_rejected: "Sending rejected: %{details}"
       generic: "Error."
 

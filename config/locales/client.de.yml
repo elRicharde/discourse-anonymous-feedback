@@ -22,5 +22,6 @@ de:
         post_rate_limited: "Zu viele Nachrichten. Bitte in %{seconds}s erneut."
         disabled: "Dieses Formular ist deaktiviert."
         send_failed: "Senden fehlgeschlagen."
+        send_rejected: "Senden abgelehnt: %{details}"
         group_not_configured: "Zielgruppe nicht konfiguriert."
         group_not_found: "Zielgruppe nicht gefunden."
