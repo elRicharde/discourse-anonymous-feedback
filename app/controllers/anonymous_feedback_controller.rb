@@ -168,6 +168,11 @@ class ::AnonymousFeedbackController < ::ApplicationController
       session.delete(session_unlock_key)
 
       render json: { success: true }, status: 200
+    rescue RateLimiter::LimitExceeded => e
+      # Discourse per-user limits on the posting user (e.g. max_topics_per_day,
+      # max_topics_in_first_day for users younger than 24h)
+      Rails.logger.error("[AnonymousFeedback] create rate limited: #{e.message}")
+      render_json_error("post_rate_limited", 429, seconds: e.available_in)
     rescue => e
       # No IP logging, no content logging (anonymity). Only error class for ops.
       Rails.logger.error("[AnonymousFeedback] create failed: #{e.class}: #{e.message}")
