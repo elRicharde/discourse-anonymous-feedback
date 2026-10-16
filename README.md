@@ -1,8 +1,8 @@
 > **Hinweis:** Eine deutschsprachige Dokumentation finden Sie [weiter unten](#deutsche-dokumentation).
 
-# Discourse Anonymous Feedback & White Board
+# Discourse Anonymous Feedback, White Board & Event Feedback
 
-This Discourse plugin provides two independent, anonymous posting forms: "Anonymous Feedback" and "White Board". Both forms are protected by a "door code" (a simple password) and allow users without an account to send a private message to a pre-configured user group.
+This Discourse plugin provides three independent, anonymous posting forms: "Anonymous Feedback", "White Board" and "Anonymous Event Feedback" (`/afva`). All forms are protected by a "door code" (a simple password) and allow users without an account to send a private message to a pre-configured user group.
 
 Technically, posts are entered on a webpage without login and can also be used in a private browser tab. Tracing the sender is impossible because IP addresses are not logged. This plugin is designed to provide a secure and confidential communication channel.
 
@@ -22,7 +22,7 @@ Ultimately, this plugin improves community interaction by creating a more inclus
 
 The plugin was developed with a focus on anonymity and security.
 
-1.  **Access**: A user navigates to `/anonymous-feedback` or `/white-board`.
+1.  **Access**: A user navigates to `/anonymous-feedback`, `/white-board` or `/afva`.
 2.  **Unlock**: The user must enter the correct door code. The server validates this code.
     -   To prevent brute-force attacks, the server uses a rate-limiting system based on an HMAC hash of the user's IP address and a rotating secret. The IP address itself is never stored.
     -   If the code is correct, the server sets a temporary, one-time usable flag in the user's session.
@@ -61,11 +61,13 @@ This use case serves to provide a direct, confidential communication line to a s
 
 ## Features
 
--   **Two Independent Endpoints**: Provides `/anonymous-feedback` and `/white-board`, each with its own separate configuration.
+-   **Three Independent Endpoints**: Provides `/anonymous-feedback`, `/white-board` and `/afva` (Anonymous Event Feedback), each with its own separate configuration and door code.
+-   **Switchable Event Page**: `/afva` can be switched to "not active" in the settings. The page then stays reachable and shows its title plus "This page is currently not active", but no door code or message field. Its title is a single setting, maintained in DE / EN.
 -   **Protection via Door Code**: Each form is protected by its own secret door code to prevent spam. The door code is the same for everyone, and the page can also be used in private mode or on parents' computer.
 -   **Configurable Target Group**: Messages from each form are sent as a private message to a specific, configurable user group.
 -   **One-Time Session**: After a message has been successfully sent, the user is redirected back to the door code screen. They must enter the code again to send another message, which prevents simple multi-post spamming. After sending, you land back on the door code, no multi-post is easily possible.
 -   **Anonymity-Preserving Rate Limiting**: Protects against brute-force attacks and spam without logging IP addresses. A temporary, anonymous identifier (HMAC with a rotating secret) is used to track failed attempts. A maximum of N (Default = 5) feedbacks per hour can be submitted, which is ample and helps if evil bots should get in or someone wants to have a joke.
+-   **Confirmation Page**: After sending, the user sees in German and English when and to whom the message was sent (the display name of the target group, or its name if no display name is set), plus the sent subject and text. A button copies the text, so it can serve as a template for a new attempt if the message is not forwarded or published. The content is only kept in the browser memory and disappears when the page is closed or "New message" is clicked, which leads back to the door code.
 -   **Bot Protection**: Contains a hidden honeypot field to catch simple bots.
 -   **Custom Sender User**: You can define a bot user for each form so that the private messages appear to be sent by this user (e.g., "FeedbackBot"). The user must exist. If empty, the system user is used by default. Discourse's per-user rate limits (`rate_limit_create_topic`, `max_personal_messages_per_day`, ...) are skipped for this bot; throttling is done solely by the plugin's `rate_limit_per_hour` setting.
 -   **Descriptive Error Messages**: Limits and validation errors are reported to the user with the reason, e.g. "Too many messages, try again in 1234s" or "Sending rejected: You've already posted that!" (Discourse's duplicate-content check). Only a generic "Sending failed" is shown for unexpected server errors; details go to the Rails log (`[AnonymousFeedback] ...`), never to the browser.
@@ -90,12 +92,15 @@ Follow the standard guide for installing Discourse plugins: [Install a Plugin](h
 
 ## Configuration
 
-After installation, you can configure the plugin in the Discourse admin settings. Search for "anonymous feedback". All settings are independent for the "Anonymous Feedback" and "White Board" forms.
+After installation, you can configure the plugin in the Discourse admin settings. Search for "anonymous feedback". All settings are independent for the three forms.
 
 | Setting | Description |
 | :--- | :--- |
 | `anonymous_feedback_enabled` | Toggles the `/anonymous-feedback` page on or off. |
 | `white_board_enabled` | Toggles the `/white-board` page on or off. |
+| `afva_enabled` | Toggles the `/afva` page on or off (off = 404). |
+| `afva_form_active` | Only `/afva`. Off = the page shows its title and "currently not active", no form. Unlock and sending are refused by the server as well. |
+| `afva_title` | Only `/afva`. Page title and event name in the confirmation. Write it in both languages, e.g. "Sommerfest 2026 / Summer Party 2026" (anonymous visitors get the forum language, not their browser language). Empty = default title. |
 | `... door_code` | The secret password users must enter to access the message form. |
 | `... target_group` | The name of the user group that receives the private messages. This group must exist. |
 | `... rate_limit_per_hour` | A global limit on how many messages can be sent per hour (per endpoint, all users together). This is the only throttle applied to sending; Discourse's own per-user limits do not apply to the bot. Set to `0` to disable the endpoint. |
@@ -107,15 +112,16 @@ After installation, you can configure the plugin in the Discourse admin settings
 
 ## Development / Architecture
 
--   **Backend**: A single Ruby on Rails controller, `AnonymousFeedbackController`, processes all requests for both endpoints. It uses a `kind` method that checks the request path (`/anonymous-feedback` vs. `/white-board`) to determine which configurations to use. This avoids code duplication. A dynamic `setting` helper further simplifies reading the configuration.
+-   **Backend**: A single Ruby on Rails controller, `AnonymousFeedbackController`, processes all requests for all endpoints. A central `KINDS` table defines path, settings prefix, subject prefix and the optional "active" setting per page; `plugin.rb` generates the routes from it, and `kind` picks the entry by request path. A new page is one table entry plus its settings, locales and a three-line route/template. This avoids code duplication. A dynamic `setting` helper further simplifies reading the configuration.
 -   **Frontend**: The user interface is based on a single, reusable Ember.js component, `<AnonymousFeedbackForm />`.
     -   This component contains the entire HTML, CSS, and Javascript logic for the form's state (unlocking, sending, error handling).
-    -   The route templates (`anonymous-feedback.gjs` and `white-board.gjs`) are now extremely simple. They just instantiate this component and pass `@mode="af"` or `@mode="wb"`. This DRY (Don't Repeat Yourself) approach makes the frontend code clean and easy to maintain.
+    -   The route templates (`anonymous-feedback.gjs` and `white-board.gjs`) are now extremely simple. They just instantiate this component and pass `@mode="af"`, `@mode="wb"` or `@mode="afva"`. This DRY (Don't Repeat Yourself) approach makes the frontend code clean and easy to maintain.
     -   Everything is written in `.gjs` (template tag format); there are no `.hbs` templates and no separate route controllers, as required by current Discourse versions.
 -   **Versioning**: Releases are annotated git tags in lowercase (`v2.0`). The Docker Manager derives the displayed plugin version via `git describe`, which only sees annotated tags.
 
 ## Changelog
 
+-   **v2.1** (unreleased): Third page `/afva` (Anonymous Event Feedback, subject prefix `af_VA: `) with its own door code, a bilingual title setting and an "active" switch. Confirmation page with time, recipient, sent content and copy button for all pages. Controller refactored to a `KINDS` table. Fix: the double `enabled_site_setting` made the whole plugin depend on `white_board_enabled`.
 -   **v2.0** (2026-09-11): Rollout release. Migration to `.gjs`, controllers merged into the component, textarea fills the screen, Enter submits the door code, multi-line message placeholder, descriptive error messages (duplicate content, limits), Discourse per-user rate limits skipped for the bot.
 -   **1.1**: Two endpoints (Anonymous Feedback + White Board) with separate settings, README.
 -   **v0.8**: Stable state on Ember/Glimmer.
@@ -153,9 +159,9 @@ You can configure the rotation interval (`hmac_rotation_hours`).
 ---
 
 <a id="deutsche-dokumentation"></a>
-# Discourse Anonymes Feedback & White Board
+# Discourse Anonymes Feedback, White Board & Feedback Veranstaltung
 
-Dieses Discourse-Plugin stellt zwei unabhängige, anonyme Formulare bereit: "Anonymes Feedback" und "White Board". Beide Formulare sind durch einen "Türcode" (ein einfaches Passwort) geschützt und ermöglichen es Benutzern ohne Account, eine private Nachricht an eine vorkonfigurierte Benutzergruppe zu senden.
+Dieses Discourse-Plugin stellt drei unabhängige, anonyme Formulare bereit: "Anonymes Feedback", "White Board" und "Anonymes Feedback Veranstaltung" (`/afva`). Alle Formulare sind durch einen "Türcode" (ein einfaches Passwort) geschützt und ermöglichen es Benutzern ohne Account, eine private Nachricht an eine vorkonfigurierte Benutzergruppe zu senden.
 
 Technisch werden Beiträge auf einer Webseite ohne Login eingegeben und können auch im privaten Tab verwendet werden. Eine Rückverfolgung des Absenders ist nicht möglich, da IP-Adressen nicht geloggt werden. Dieses Plugin ist darauf ausgelegt, einen sicheren und vertraulichen Kommunikationskanal bereitzustellen.
 
@@ -175,7 +181,7 @@ Letztendlich verbessert dieses Plugin die Community-Interaktion, indem es ein in
 
 Das Plugin wurde mit Fokus auf Anonymität und Sicherheit entwickelt.
 
-1.  **Zugriff**: Ein Benutzer navigiert zu `/anonymous-feedback` oder `/white-board`.
+1.  **Zugriff**: Ein Benutzer navigiert zu `/anonymous-feedback`, `/white-board` oder `/afva`.
 2.  **Freischalten**: Der Benutzer muss den korrekten Türcode eingeben. Der Server validiert diesen Code.
     -   Um Brute-Force-Angriffe zu verhindern, verwendet der Server ein Ratenbegrenzungssystem, das auf einem HMAC-Hash der IP-Adresse des Benutzers und einem rotierenden Geheimnis basiert. Die IP-Adresse selbst wird niemals gespeichert.
     -   Wenn der Code korrekt ist, setzt der Server ein temporäres, einmalig verwendbares Flag in der Sitzung des Benutzers.
@@ -214,11 +220,13 @@ Dieser Anwendungsfall dient dazu, eine direkte, vertrauliche Kommunikationslinie
 
 ## Funktionen
 
--   **Zwei unabhängige Endpunkte**: Stellt `/anonymous-feedback` und `/white-board` bereit, jeder mit eigener, separater Konfiguration.
+-   **Drei unabhängige Endpunkte**: Stellt `/anonymous-feedback`, `/white-board` und `/afva` (Anonymes Feedback Veranstaltung) bereit, jeder mit eigener Konfiguration und eigenem Türcode.
+-   **Abschaltbare Veranstaltungsseite**: `/afva` lässt sich in den Einstellungen auf "nicht aktiv" stellen. Die Seite bleibt dann erreichbar und zeigt ihren Titel plus "Diese Seite ist aktuell nicht aktiv", aber kein Türcode- und kein Nachrichtenfeld. Der Titel ist ein einzelnes Setting, das in DE / EN gepflegt wird.
 -   **Schutz durch Türcode**: Jedes Formular ist durch einen eigenen geheimen Türcode geschützt, um Spam zu verhindern. Der Türcode ist für alle gleich, und die Seite kann auch im privaten Modus oder auf dem Rechner seiner Eltern genutzt werden.
 -   **Konfigurierbare Zielgruppe**: Nachrichten aus jedem Formular werden als private Nachricht an eine spezifische, konfigurierbare Benutzergruppe gesendet.
 -   **Einmalige Sitzung**: Nachdem eine Nachricht erfolgreich gesendet wurde, wird der Benutzer zum Türcode-Bildschirm zurückgeleitet. Er muss den Code erneut eingeben, um eine weitere Nachricht zu senden, was einfaches Multi-Post-Spamming verhindert. Nach dem Absenden landet man wieder auf dem Türcode-Bildschirm, kein Multi-Post ist so einfach möglich.
 -   **Anonymität wahrende Ratenbegrenzung**: Schützt vor Brute-Force-Angriffen und Spam, ohne IP-Adressen zu protokollieren. Es wird ein temporärer, anonymer Bezeichner (HMAC mit einem rotierenden Geheimnis) verwendet, um fehlgeschlagene Versuche zu verfolgen. Es können maximal N (Standard = 5) Feedbacks pro Stunde eingereicht werden, was üppig ist und hilft, falls doch mal böse Bots reinkommen sollten oder sich jemand einen Spaß erlauben will.
+-   **Bestätigungsseite**: Nach dem Senden sieht der Nutzer auf Deutsch und Englisch, wann und an wen die Nachricht ging (Anzeigename der Zielgruppe, ohne Anzeigename deren Name), dazu Betreff und Text. Ein Button kopiert den Text, damit er als Vorlage für einen neuen Versuch dienen kann, falls die Nachricht nicht weitergeleitet oder veröffentlicht wird. Der Inhalt liegt nur im Speicher des Browsers und verschwindet beim Schließen der Seite oder mit "Neue Nachricht", das zurück zum Türcode führt.
 -   **Bot-Schutz**: Enthält ein verstecktes Honeypot-Feld, um einfache Bots abzufangen.
 -   **Benutzerdefinierter Absender-Benutzer**: Sie können für jedes Formular einen Bot-Benutzer festlegen, sodass die privaten Nachrichten scheinbar von diesem Benutzer gesendet werden (z. B. "FeedbackBot"). Der Benutzer muss existieren. Wenn leer, wird standardmäßig der Systembenutzer verwendet. Die Discourse-eigenen Limits pro Benutzer (`rate_limit_create_topic`, `max_personal_messages_per_day`, ...) werden für diesen Bot übersprungen; gedrosselt wird ausschließlich über die Plugin-Einstellung `rate_limit_per_hour`.
 -   **Sprechende Fehlermeldungen**: Limits und Validierungsfehler werden dem Nutzer mit Grund gemeldet, z. B. "Zu viele Nachrichten. Bitte in 1234s erneut." oder "Senden abgelehnt: Du hast das bereits gepostet!" (Duplikat-Prüfung von Discourse). Nur bei unerwarteten Serverfehlern erscheint ein generisches "Senden fehlgeschlagen"; Details landen im Rails-Log (`[AnonymousFeedback] ...`), nie im Browser.
@@ -243,12 +251,15 @@ Folgen Sie der Standard-Anleitung zur Installation von Discourse-Plugins: [Ein P
 
 ## Konfiguration
 
-Nach der Installation können Sie das Plugin in den Discourse-Admin-Einstellungen konfigurieren. Suchen Sie nach "anonymous feedback". Alle Einstellungen sind für die Formulare "Anonymes Feedback" und "White Board" unabhängig.
+Nach der Installation können Sie das Plugin in den Discourse-Admin-Einstellungen konfigurieren. Suchen Sie nach "anonymous feedback". Alle Einstellungen sind für die drei Formulare unabhängig.
 
 | Einstellung | Beschreibung |
 | :--- | :--- |
 | `anonymous_feedback_enabled` | Schaltet die Seite `/anonymous-feedback` ein oder aus. |
 | `white_board_enabled` | Schaltet die Seite `/white-board` ein oder aus. |
+| `afva_enabled` | Schaltet die Seite `/afva` ein oder aus (aus = 404). |
+| `afva_form_active` | Nur `/afva`. Aus = die Seite zeigt Titel und "aktuell nicht aktiv", kein Formular. Freischalten und Senden lehnt dann auch der Server ab. |
+| `afva_title` | Nur `/afva`. Seitentitel und Name der VA in der Bestätigung. Zweisprachig pflegen, z. B. "Sommerfest 2026 / Summer Party 2026" (anonyme Besucher bekommen die Forensprache, nicht ihre Browsersprache). Leer = Standardtitel. |
 | `... door_code` | Das geheime Passwort, das Benutzer eingeben müssen, um auf das Nachrichtenformular zuzugreifen. |
 | `... target_group` | Der Name der Benutzergruppe, die die privaten Nachrichten erhalten soll. Diese Gruppe muss existieren. |
 | `... rate_limit_per_hour` | Ein globales Limit, wie viele Nachrichten pro Stunde gesendet werden können (pro Endpunkt, alle Nutzer zusammen). Das ist die einzige Drossel beim Senden; die Discourse-eigenen Limits pro Benutzer gelten für den Bot nicht. Auf `0` setzen, um den Endpunkt zu deaktivieren. |
@@ -260,15 +271,16 @@ Nach der Installation können Sie das Plugin in den Discourse-Admin-Einstellunge
 
 ## Entwicklung / Architektur
 
--   **Backend**: Ein einziger Ruby on Rails Controller, `AnonymousFeedbackController`, verarbeitet alle Anfragen für beide Endpunkte. Er verwendet eine `kind`-Methode, die den Anfragepfad (`/anonymous-feedback` vs. `/white-board`) prüft, um zu bestimmen, welche Konfigurationen verwendet werden sollen. Dies vermeidet Code-Duplizierung. Ein dynamischer `setting`-Helfer vereinfacht das Auslesen der Konfiguration zusätzlich.
+-   **Backend**: Ein einziger Ruby on Rails Controller, `AnonymousFeedbackController`, verarbeitet alle Anfragen für alle Endpunkte. Eine zentrale `KINDS`-Tabelle legt pro Seite Pfad, Settings-Präfix, Betreff-Präfix und das optionale "aktiv"-Setting fest; `plugin.rb` erzeugt daraus die Routen, und `kind` wählt den Eintrag anhand des Anfragepfads. Eine neue Seite ist ein Tabelleneintrag plus Settings, Locales und eine dreizeilige Route bzw. Template. Dies vermeidet Code-Duplizierung. Ein dynamischer `setting`-Helfer vereinfacht das Auslesen der Konfiguration zusätzlich.
 -   **Frontend**: Die Benutzeroberfläche basiert auf einer einzigen, wiederverwendbaren Ember.js-Komponente, `<AnonymousFeedbackForm />`.
     -   Diese Komponente enthält die gesamte HTML-, CSS- und Javascript-Logik für den Zustand des Formulars (Freischalten, Senden, Fehlerbehandlung).
-    -   Die Routen-Templates (`anonymous-feedback.gjs` und `white-board.gjs`) sind jetzt extrem einfach. Sie instanziieren nur noch diese Komponente und übergeben `@mode="af"` bzw. `@mode="wb"`. Dieser DRY-Ansatz (Don't Repeat Yourself) macht den Frontend-Code sauber und leicht wartbar.
+    -   Die Routen-Templates (`anonymous-feedback.gjs` und `white-board.gjs`) sind jetzt extrem einfach. Sie instanziieren nur noch diese Komponente und übergeben `@mode="af"`, `@mode="wb"` bzw. `@mode="afva"`. Dieser DRY-Ansatz (Don't Repeat Yourself) macht den Frontend-Code sauber und leicht wartbar.
     -   Alles ist im `.gjs`-Format (Template-Tag) geschrieben; es gibt keine `.hbs`-Templates und keine separaten Routen-Controller mehr, wie es aktuelle Discourse-Versionen verlangen.
 -   **Versionierung**: Releases sind annotierte Git-Tags in Kleinschreibung (`v2.0`). Der Docker Manager ermittelt die angezeigte Plugin-Version per `git describe`, und das sieht nur annotierte Tags.
 
 ## Changelog
 
+-   **v2.1** (unveröffentlicht): Dritte Seite `/afva` (Anonymes Feedback Veranstaltung, Betreff-Präfix `af_VA: `) mit eigenem Türcode, zweisprachigem Titel-Setting und "aktiv"-Schalter. Bestätigungsseite mit Zeitpunkt, Empfänger, gesendetem Inhalt und Kopieren-Button für alle Seiten. Controller auf eine `KINDS`-Tabelle umgebaut. Fix: das doppelte `enabled_site_setting` hat das ganze Plugin an `white_board_enabled` gekoppelt.
 -   **v2.0** (11.09.2026): Rollout-Release. Migration auf `.gjs`, Controller in die Komponente überführt, Nachrichtenfeld füllt den Bildschirm, Enter schickt den Türcode ab, mehrzeiliger Nachrichten-Platzhalter, sprechende Fehlermeldungen (Duplikat, Limits), Discourse-Limits pro Benutzer für den Bot übersprungen.
 -   **1.1**: Zwei Endpunkte (Anonymes Feedback + White Board) mit getrennten Einstellungen, README.
 -   **v0.8**: Stabiler Stand auf Ember/Glimmer.

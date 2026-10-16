@@ -23,6 +23,33 @@
     flex-wrap: wrap;
   }
 
+  .af-confirm p:last-child,
+  .af-hint p:last-child {
+    margin-bottom: 0;
+  }
+
+  /* Gesendeter Inhalt: Zeilenumbrüche erhalten, gut markierbar zum Kopieren */
+  .af-sent-content {
+    border: 1px solid var(--primary-low);
+    border-radius: 4px;
+    padding: 0.75rem;
+    background: var(--primary-very-low);
+    white-space: pre-wrap;
+    overflow-wrap: anywhere;
+    user-select: text;
+  }
+
+  .af-sent-subject {
+    font-weight: bold;
+    margin-bottom: 0.5rem;
+  }
+
+  .af-hint {
+    margin-top: 0.75rem;
+    color: var(--primary-medium);
+    font-size: var(--font-down-1);
+  }
+
   /* Media query for mobile buttons */
   @media (max-width: 480px) {
     .af-actions .btn {

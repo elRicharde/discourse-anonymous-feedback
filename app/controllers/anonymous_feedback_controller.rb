@@ -5,6 +5,29 @@
 class ::AnonymousFeedbackController < ::ApplicationController
   requires_plugin "discourse-anonymous-feedback"
 
+  # One controller, several pages. Each kind is selected by its path; settings are
+  # looked up as "<setting_prefix>_<field>". Routes are generated from this table
+  # (plugin.rb). active_setting is optional: when present and false, the page stays
+  # reachable but shows no form, and unlock/create are refused.
+  KINDS = {
+    af: {
+      path: "/anonymous-feedback",
+      setting_prefix: "anonymous_feedback",
+      subject_prefix: "af: ",
+    },
+    wb: {
+      path: "/white-board",
+      setting_prefix: "white_board",
+      subject_prefix: "wb: ",
+    },
+    afva: {
+      path: "/afva",
+      setting_prefix: "afva",
+      subject_prefix: "af_VA: ",
+      active_setting: "afva_form_active",
+    },
+  }.freeze
+
   # Public endpoints (no login, no CSRF cookie required). We still protect via:
   # - door code
   # - global rate limits
@@ -31,6 +54,7 @@ class ::AnonymousFeedbackController < ::ApplicationController
 
   def unlock
     raise Discourse::NotFound unless feature_enabled?
+    return render_json_error("inactive", 403) unless form_active?
 
     # Honeypot: bots fill hidden field
     if params[:website].present?
@@ -101,6 +125,7 @@ class ::AnonymousFeedbackController < ::ApplicationController
 
   def create
     raise Discourse::NotFound unless feature_enabled?
+    return render_json_error("inactive", 403) unless form_active?
 
     # Honeypot
     if params[:website].present?
@@ -158,7 +183,7 @@ class ::AnonymousFeedbackController < ::ApplicationController
         target_group_names: [group_name],
         skip_rate_limits: true
       )
-      creator.create
+      post = creator.create
 
       # Validation errors (e.g. duplicate content, title too short) are user-facing
       # and contain no message content, so we pass them through verbatim.
@@ -171,7 +196,12 @@ class ::AnonymousFeedbackController < ::ApplicationController
       # One doorcode unlock = one message; forces re-unlock for next message (your preferred flow)
       session.delete(session_unlock_key)
 
-      render json: { success: true }, status: 200
+      # Shown on the confirmation screen: time of the PM and the group's display name
+      render json: {
+        success: true,
+        sent_at: (post&.created_at || Time.zone.now).iso8601,
+        recipient: group.full_name.presence || group.name,
+      }, status: 200
     rescue RateLimiter::LimitExceeded => e
       # Discourse per-user limits on the posting user (e.g. max_topics_per_day,
       # max_topics_in_first_day for users younger than 24h)
@@ -190,31 +220,32 @@ class ::AnonymousFeedbackController < ::ApplicationController
     render json: { error_key: key, error_params: params }, status: status
   end
 
-  # -------- endpoint selection (two pages, one controller) --------
-  # We distinguish by path:
-  #   /anonymous-feedback  => kind :af
-  #   /white-board        => kind :wb
-  #
-  # Routes will map both to this controller (index/unlock/create).
+  # -------- endpoint selection (several pages, one controller) --------
+  # The kind is derived from the request path, see KINDS.
   def kind
-    p = request.path.to_s
-    return :wb if p.start_with?("/white-board")
-    :af
+    @kind ||=
+      begin
+        p = request.path.to_s
+        KINDS.find { |_, cfg| p == cfg[:path] || p.start_with?("#{cfg[:path]}/") }&.first || :af
+      end
+  end
+
+  def kind_config
+    KINDS[kind]
   end
 
   def feature_enabled?
-    case kind
-    when :af then SiteSetting.anonymous_feedback_enabled
-    when :wb then SiteSetting.white_board_enabled
-    else false
-    end
+    setting(:enabled) == true
+  end
+
+  def form_active?
+    active_setting = kind_config[:active_setting]
+    active_setting.nil? || SiteSetting.get(active_setting) == true
   end
 
   # -------- settings helpers (dynamic lookup based on kind) --------
   def setting(field)
-    prefix = (kind == :wb) ? "white_board" : "anonymous_feedback"
-    setting_name = "#{prefix}_#{field}"
-    SiteSetting.get(setting_name)
+    SiteSetting.get("#{kind_config[:setting_prefix]}_#{field}")
   end
 
   def setting_str(field)
@@ -227,7 +258,7 @@ class ::AnonymousFeedbackController < ::ApplicationController
 
   # -------- subject prefix --------
   def subject_prefix
-    kind == :wb ? "wb: " : "af: "
+    kind_config[:subject_prefix]
   end
 
   # -------- posting user (system or configured bot) --------

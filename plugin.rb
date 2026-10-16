@@ -1,12 +1,12 @@
 # frozen_string_literal: true
 
 # name: discourse-anonymous-feedback
-# about: Public doorcode form that sends PM to a group (2 endpoints: anonymous-feedback + white-board)
+# about: Public doorcode form that sends PM to a group (3 endpoints: anonymous-feedback, white-board, afva)
 # version: 2.0
 # authors: Richard
 
-enabled_site_setting :anonymous_feedback_enabled
-enabled_site_setting :white_board_enabled
+# No enabled_site_setting: a plugin has only one, and each page has its own
+# *_enabled toggle (checked in the controller via KINDS).
 
 register_asset "stylesheets/common/anonymous-feedback.scss"
 
@@ -18,15 +18,13 @@ after_initialize do
   # Controller
   require_dependency File.expand_path("../app/controllers/anonymous_feedback_controller.rb", __FILE__)
 
-  # Routes (addresses are intentionally NOT configurable)
+  # Routes (addresses are intentionally NOT configurable, see KINDS)
   Discourse::Application.routes.append do
-    get  "/anonymous-feedback"        => "anonymous_feedback#show"
-    post "/anonymous-feedback/unlock" => "anonymous_feedback#unlock"
-    post "/anonymous-feedback"        => "anonymous_feedback#create"
-
-    get  "/white-board"        => "anonymous_feedback#show"
-    post "/white-board/unlock" => "anonymous_feedback#unlock"
-    post "/white-board"        => "anonymous_feedback#create"
+    ::AnonymousFeedbackController::KINDS.each_value do |cfg|
+      get  cfg[:path]              => "anonymous_feedback#show"
+      post "#{cfg[:path]}/unlock" => "anonymous_feedback#unlock"
+      post cfg[:path]              => "anonymous_feedback#create"
+    end
   end
 
   # Ensure plugin views are discoverable (safe even if you later drop ERB view)

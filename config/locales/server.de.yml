@@ -21,4 +21,15 @@ de:
       send_rejected: "Senden abgelehnt: %{details}"
       generic: "Fehler."
 
-
+  site_settings:
+    afva_enabled: "Seite /afva (Anonymes Feedback Veranstaltung) erreichbar. Aus = 404."
+    afva_form_active: "Formular auf /afva aktiv. Aus = Seite zeigt nur Titel und \"aktuell nicht aktiv\", kein Türcode, kein Senden."
+    afva_title: "Seitentitel von /afva, gleichzeitig der Name der VA in der Bestätigung. Bitte in DE / EN pflegen, z. B. \"Sommerfest 2026 / Summer Party 2026\". Leer = Standardtitel."
+    afva_door_code: "Türcode für /afva"
+    afva_target_group: "Gruppenname, an den /afva-Nachrichten als PN gehen"
+    afva_rate_limit_per_hour: "Globales Limit /afva: maximale Versuche bzw. Nachrichten pro Stunde (0 = deaktiviert)"
+    afva_max_message_length: "Maximale Nachrichtenlänge /afva"
+    afva_hmac_rotation_hours: "Rotation des HMAC-Geheimnisses /afva in Stunden"
+    afva_bot_username: "Absender der PN für /afva (leer = System)"
+    afva_subject_placeholder: "Platzhalter Betreff /afva"
+    afva_message_placeholder: "Platzhalter Nachricht /afva (mehrzeilig)"

@@ -14,6 +14,11 @@ plugins:
     client: false
     type: bool
 
+  afva_enabled:
+    default: false
+    client: false
+    type: bool
+
 
   # =====================================================
   # ---- Anonymous Feedback (af) ----
@@ -115,6 +120,69 @@ plugins:
     type: text
 
   white_board_message_placeholder:
+    default: ""
+    client: true
+    type: text
+    textarea: true
+
+
+  # =====================================================
+  # ---- Anonymes Feedback Veranstaltung (afva) ----
+  # =====================================================
+
+  afva_form_active:
+    default: true
+    client: true
+    type: bool
+
+  afva_title:
+    default: ""
+    client: true
+    type: text
+
+  afva_door_code:
+    default: "ChangeToYourSecret"
+    client: false
+    secret: true
+    type: text
+
+  afva_target_group:
+    default: ""
+    client: false
+    type: text
+
+  afva_rate_limit_per_hour:
+    default: 5
+    min: 0
+    max: 100
+    client: false
+    type: integer
+
+  afva_max_message_length:
+    default: 30000
+    min: 500
+    max: 50000
+    client: false
+    type: integer
+
+  afva_hmac_rotation_hours:
+    default: 4
+    min: 1
+    max: 72
+    client: false
+    type: integer
+
+  afva_bot_username:
+    default: ""
+    client: false
+    type: text
+
+  afva_subject_placeholder:
+    default: ""
+    client: true
+    type: text
+
+  afva_message_placeholder:
     default: ""
     client: true
     type: text
