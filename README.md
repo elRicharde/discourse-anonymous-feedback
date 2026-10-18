@@ -121,7 +121,7 @@ After installation, you can configure the plugin in the Discourse admin settings
 
 ## Changelog
 
--   **v2.1** (unreleased): Third page `/afva` (Anonymous Event Feedback, subject prefix `af_VA: `) with its own door code, a bilingual title setting and an "active" switch. Confirmation page with time, recipient, sent content and copy button for all pages. Controller refactored to a `KINDS` table. Fix: the double `enabled_site_setting` made the whole plugin depend on `white_board_enabled`.
+-   **v2.1** (2026-10-18): Third page `/afva` (Anonymous Event Feedback, subject prefix `af_VA: `) with its own door code, a bilingual title setting and an "active" switch. Confirmation page with time, recipient, sent content and copy button for all pages. Controller refactored to a `KINDS` table. Fix: the double `enabled_site_setting` made the whole plugin depend on `white_board_enabled`.
 -   **v2.0** (2026-09-11): Rollout release. Migration to `.gjs`, controllers merged into the component, textarea fills the screen, Enter submits the door code, multi-line message placeholder, descriptive error messages (duplicate content, limits), Discourse per-user rate limits skipped for the bot.
 -   **1.1**: Two endpoints (Anonymous Feedback + White Board) with separate settings, README.
 -   **v0.8**: Stable state on Ember/Glimmer.
@@ -280,7 +280,7 @@ Nach der Installation können Sie das Plugin in den Discourse-Admin-Einstellunge
 
 ## Changelog
 
--   **v2.1** (unveröffentlicht): Dritte Seite `/afva` (Anonymes Feedback Veranstaltung, Betreff-Präfix `af_VA: `) mit eigenem Türcode, zweisprachigem Titel-Setting und "aktiv"-Schalter. Bestätigungsseite mit Zeitpunkt, Empfänger, gesendetem Inhalt und Kopieren-Button für alle Seiten. Controller auf eine `KINDS`-Tabelle umgebaut. Fix: das doppelte `enabled_site_setting` hat das ganze Plugin an `white_board_enabled` gekoppelt.
+-   **v2.1** (18.10.2026): Dritte Seite `/afva` (Anonymes Feedback Veranstaltung, Betreff-Präfix `af_VA: `) mit eigenem Türcode, zweisprachigem Titel-Setting und "aktiv"-Schalter. Bestätigungsseite mit Zeitpunkt, Empfänger, gesendetem Inhalt und Kopieren-Button für alle Seiten. Controller auf eine `KINDS`-Tabelle umgebaut. Fix: das doppelte `enabled_site_setting` hat das ganze Plugin an `white_board_enabled` gekoppelt.
 -   **v2.0** (11.09.2026): Rollout-Release. Migration auf `.gjs`, Controller in die Komponente überführt, Nachrichtenfeld füllt den Bildschirm, Enter schickt den Türcode ab, mehrzeiliger Nachrichten-Platzhalter, sprechende Fehlermeldungen (Duplikat, Limits), Discourse-Limits pro Benutzer für den Bot übersprungen.
 -   **1.1**: Zwei Endpunkte (Anonymes Feedback + White Board) mit getrennten Einstellungen, README.
 -   **v0.8**: Stabiler Stand auf Ember/Glimmer.

@@ -2,7 +2,7 @@
 
 # name: discourse-anonymous-feedback
 # about: Public doorcode form that sends PM to a group (3 endpoints: anonymous-feedback, white-board, afva)
-# version: 2.0
+# version: 2.1
 # authors: Richard
 
 # No enabled_site_setting: a plugin has only one, and each page has its own
