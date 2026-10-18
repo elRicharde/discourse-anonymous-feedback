@@ -119,7 +119,6 @@ export default class AnonymousFeedbackForm extends Component {
       date: `${pad(d.getDate())}.${pad(d.getMonth() + 1)}.${d.getFullYear()}`,
       time: `${pad(d.getHours())}:${pad(d.getMinutes())}`,
       recipient: this.recipient,
-      event: this.title,
     };
   }
 
@@ -291,7 +290,7 @@ export default class AnonymousFeedbackForm extends Component {
         </div>
 
         <div class="af-actions">
-          <button type="button" class="btn" {{on "click" this.copyContent}}>
+          <button type="button" class="btn btn-default" {{on "click" this.copyContent}}>
             {{#if this.copied}}
               {{i18n "js.anonymous_feedback.confirm.copied"}}
             {{else}}

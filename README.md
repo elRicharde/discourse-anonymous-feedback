@@ -100,7 +100,7 @@ After installation, you can configure the plugin in the Discourse admin settings
 | `white_board_enabled` | Toggles the `/white-board` page on or off. |
 | `afva_enabled` | Toggles the `/afva` page on or off (off = 404). |
 | `afva_form_active` | Only `/afva`. Off = the page shows its title and "currently not active", no form. Unlock and sending are refused by the server as well. |
-| `afva_title` | Only `/afva`. Page title and event name in the confirmation. Write it in both languages, e.g. "Sommerfest 2026 / Summer Party 2026" (anonymous visitors get the forum language, not their browser language). Empty = default title. |
+| `afva_title` | Only `/afva`. Page title. Write it in both languages, e.g. "Sommerfest 2026 / Summer Party 2026" (anonymous visitors get the forum language, not their browser language). Empty = default title. |
 | `... door_code` | The secret password users must enter to access the message form. |
 | `... target_group` | The name of the user group that receives the private messages. This group must exist. |
 | `... rate_limit_per_hour` | A global limit on how many messages can be sent per hour (per endpoint, all users together). This is the only throttle applied to sending; Discourse's own per-user limits do not apply to the bot. Set to `0` to disable the endpoint. |
@@ -259,7 +259,7 @@ Nach der Installation können Sie das Plugin in den Discourse-Admin-Einstellunge
 | `white_board_enabled` | Schaltet die Seite `/white-board` ein oder aus. |
 | `afva_enabled` | Schaltet die Seite `/afva` ein oder aus (aus = 404). |
 | `afva_form_active` | Nur `/afva`. Aus = die Seite zeigt Titel und "aktuell nicht aktiv", kein Formular. Freischalten und Senden lehnt dann auch der Server ab. |
-| `afva_title` | Nur `/afva`. Seitentitel und Name der VA in der Bestätigung. Zweisprachig pflegen, z. B. "Sommerfest 2026 / Summer Party 2026" (anonyme Besucher bekommen die Forensprache, nicht ihre Browsersprache). Leer = Standardtitel. |
+| `afva_title` | Nur `/afva`. Seitentitel. Zweisprachig pflegen, z. B. "Sommerfest 2026 / Summer Party 2026" (anonyme Besucher bekommen die Forensprache, nicht ihre Browsersprache). Leer = Standardtitel. |
 | `... door_code` | Das geheime Passwort, das Benutzer eingeben müssen, um auf das Nachrichtenformular zuzugreifen. |
 | `... target_group` | Der Name der Benutzergruppe, die die privaten Nachrichten erhalten soll. Diese Gruppe muss existieren. |
 | `... rate_limit_per_hour` | Ein globales Limit, wie viele Nachrichten pro Stunde gesendet werden können (pro Endpunkt, alle Nutzer zusammen). Das ist die einzige Drossel beim Senden; die Discourse-eigenen Limits pro Benutzer gelten für den Bot nicht. Auf `0` setzen, um den Endpunkt zu deaktivieren. |

@@ -24,7 +24,7 @@ en:
   site_settings:
     afva_enabled: "Page /afva (anonymous event feedback) reachable. Off = 404."
     afva_form_active: "Form on /afva active. Off = page shows only the title and \"currently not active\", no door code, no sending."
-    afva_title: "Page title of /afva, also used as the event name in the confirmation. Please maintain it in DE / EN, e.g. \"Sommerfest 2026 / Summer Party 2026\". Empty = default title."
+    afva_title: "Page title of /afva. Please maintain it in DE / EN, e.g. \"Sommerfest 2026 / Summer Party 2026\". Empty = default title."
     afva_door_code: "Door code for /afva"
     afva_target_group: "Group name that receives /afva messages via PM"
     afva_rate_limit_per_hour: "Global limit /afva: max attempts or messages per hour (0 = disabled)"
